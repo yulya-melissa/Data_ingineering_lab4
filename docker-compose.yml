@@ -1,0 +1,77 @@
+x-zoo: &zoo
+  image: zookeeper:3.9.6
+  restart: unless-stopped
+  volumes:
+    - ./conf/zoo.cfg:/conf/zoo.cfg:ro
+
+x-app: &app
+  build: .
+  image: zk-failover-app
+  # user: removed for rootless podman
+  restart: "no"
+  environment:
+    RUN_ID: ${RUN_ID:-manual}
+    FENCING: ${FENCING:-0}
+    ZK_HOSTS: zoo1:2181,zoo2:2181,zoo3:2181
+    ZK_ROOT: /failover/${RUN_ID:-manual}
+    SESSION_TIMEOUT: "10"
+    CHUNKS: "30"
+    CHUNK_DELAY: "1.0"
+    SINK_URL: http://sink:8080
+  volumes:
+    - ./data:/data:ro
+    - ./state:/state:z      # FIX: :z для SELinux/Podman
+    - ./logs:/logs:z        # FIX: :z для SELinux/Podman
+
+services:
+  zoo1:
+    <<: *zoo
+    hostname: zoo1
+    environment: { ZOO_MY_ID: "1" }
+    ports: ["2181:2181"]
+    volumes:
+      - ./conf/zoo.cfg:/conf/zoo.cfg:ro
+      - zoo1-data:/data
+      - zoo1-datalog:/datalog
+
+  zoo2:
+    <<: *zoo
+    hostname: zoo2
+    environment: { ZOO_MY_ID: "2" }
+    ports: ["2182:2181"]
+    volumes:
+      - ./conf/zoo.cfg:/conf/zoo.cfg:ro
+      - zoo2-data:/data
+      - zoo2-datalog:/datalog
+
+  zoo3:
+    <<: *zoo
+    hostname: zoo3
+    environment: { ZOO_MY_ID: "3" }
+    ports: ["2183:2181"]
+    volumes:
+      - ./conf/zoo.cfg:/conf/zoo.cfg:ro
+      - zoo3-data:/data
+      - zoo3-datalog:/datalog
+
+  sink:
+    <<: *app
+    command: ["python", "src/sink.py"]
+
+  coord1:
+    <<: *app
+    command: ["python", "src/coordinator.py", "coord1"]
+    depends_on: [zoo1, zoo2, zoo3, sink]
+
+  coord2:
+    <<: *app
+    command: ["python", "src/coordinator.py", "coord2"]
+    depends_on: [zoo1, zoo2, zoo3, sink]
+
+volumes:
+  zoo1-data:
+  zoo1-datalog:
+  zoo2-data:
+  zoo2-datalog:
+  zoo3-data:
+  zoo3-datalog:

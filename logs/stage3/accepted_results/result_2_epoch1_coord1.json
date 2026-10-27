@@ -1,0 +1,36 @@
+{
+  "epoch": 1,
+  "node": "coord1",
+  "result": {
+    "unique_pairs": 36261,
+    "total_frequency": 286936,
+    "top5": [
+      [
+        "MySQL",
+        "PHP",
+        3596
+      ],
+      [
+        "Git",
+        "PHP",
+        2865
+      ],
+      [
+        "JavaScript",
+        "PHP",
+        2675
+      ],
+      [
+        "HTML",
+        "PHP",
+        2154
+      ],
+      [
+        "Laravel",
+        "PHP",
+        1779
+      ]
+    ],
+    "sha256": "7fcf1f679cbd6ebe86caa78b13b4b30d2e332093afef7e30ce62a53718aa45fd"
+  }
+}

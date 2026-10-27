@@ -1,0 +1,40 @@
+2026-10-27T11:43:10.001Z [coord1] сессия ZooKeeper: CONNECTED
+2026-10-27T11:43:10.004Z [coord1] STANDBY жду очереди на лидерство
+2026-10-27T11:43:10.013Z [coord1] BECAME_LEADER epoch=1
+2026-10-27T11:43:10.223Z [coord1] чекпоинта нет, начинаю с начала
+2026-10-27T11:43:10.226Z [coord1] chunk 1/30 done (epoch=1)
+2026-10-27T11:43:11.231Z [coord1] chunk 2/30 done (epoch=1)
+2026-10-27T11:43:12.236Z [coord1] chunk 3/30 done (epoch=1)
+2026-10-27T11:43:13.244Z [coord1] chunk 4/30 done (epoch=1)
+2026-10-27T11:43:14.255Z [coord1] chunk 5/30 done (epoch=1)
+2026-10-27T11:43:15.274Z [coord1] chunk 6/30 done (epoch=1)
+2026-10-27T11:43:16.285Z [coord1] chunk 7/30 done (epoch=1)
+2026-10-27T11:43:17.293Z [coord1] chunk 8/30 done (epoch=1)
+2026-10-27T11:43:18.308Z [coord1] chunk 9/30 done (epoch=1)
+2026-10-27T11:43:19.321Z [coord1] chunk 10/30 done (epoch=1)
+2026-10-27T11:43:59.429Z [coord1] сессия ZooKeeper: SUSPENDED
+2026-10-27T11:43:59.431Z [coord1] сессия ZooKeeper: LOST
+2026-10-27T11:43:59.450Z [coord1] chunk 11/30 done (epoch=1)
+2026-10-27T11:43:59.456Z [coord1] сессия ZooKeeper: CONNECTED
+2026-10-27T11:44:00.471Z [coord1] chunk 12/30 done (epoch=1)
+2026-10-27T11:44:01.489Z [coord1] chunk 13/30 done (epoch=1)
+2026-10-27T11:44:02.507Z [coord1] chunk 14/30 done (epoch=1)
+2026-10-27T11:44:03.524Z [coord1] chunk 15/30 done (epoch=1)
+2026-10-27T11:44:04.548Z [coord1] chunk 16/30 done (epoch=1)
+2026-10-27T11:44:05.566Z [coord1] chunk 17/30 done (epoch=1)
+2026-10-27T11:44:06.585Z [coord1] chunk 18/30 done (epoch=1)
+2026-10-27T11:44:07.609Z [coord1] chunk 19/30 done (epoch=1)
+2026-10-27T11:44:08.634Z [coord1] chunk 20/30 done (epoch=1)
+2026-10-27T11:44:09.658Z [coord1] chunk 21/30 done (epoch=1)
+2026-10-27T11:44:10.686Z [coord1] chunk 22/30 done (epoch=1)
+2026-10-27T11:44:11.709Z [coord1] chunk 23/30 done (epoch=1)
+2026-10-27T11:44:12.732Z [coord1] chunk 24/30 done (epoch=1)
+2026-10-27T11:44:13.758Z [coord1] chunk 25/30 done (epoch=1)
+2026-10-27T11:44:14.781Z [coord1] chunk 26/30 done (epoch=1)
+2026-10-27T11:44:15.805Z [coord1] chunk 27/30 done (epoch=1)
+2026-10-27T11:44:16.827Z [coord1] chunk 28/30 done (epoch=1)
+2026-10-27T11:44:17.852Z [coord1] chunk 29/30 done (epoch=1)
+2026-10-27T11:44:18.884Z [coord1] chunk 30/30 done (epoch=1)
+2026-10-27T11:44:19.987Z [coord1] PUBLISHED результат принят (epoch=1)
+2026-10-27T11:44:19.994Z [coord1] DONE
+2026-10-27T11:44:19.996Z [coord1] сессия ZooKeeper: LOST

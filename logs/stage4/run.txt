@@ -1,0 +1,201 @@
+============================================================
+ Этап 4: приостановка лидера, FENCING=1
+ Защита по эпохе ВКЛЮЧЕНА
+ Получатель должен отклонить запись старого лидера
+ Запуск: Tue Oct 27 02:45:31 PM MSK 2026
+============================================================
+
+[14:45:31] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (38ee991bb381)
+      Очистка coord1 (38ee991bb3811450870243663ee5221cca6a2a38994cdf24c9d819cfcd9fe0e9)
+      Очистка coord2 (353abb38a216)
+      Очистка coord2 (353abb38a2160df7718c6e3ed58aaee994626e2dac56652e6eb76b82f65c9892)
+      Очистка sink (892b3d0f836c)
+      Очистка sink (892b3d0f836cf2e13f9887bfcbf41a6e6b0d1b9b9125061d6be4b7e85fab15b0)
+
+[14:45:32] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+      ZooKeeper работает
+
+[14:45:32] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:45:33] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:45:33+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon   8.03MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon   8.03MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[14:45:38] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[14:45:39] 6. Жду chunk 10 из 30
+
+[14:45:47] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 11:45:47.279589131 UTC
+
+[14:45:47] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 10.1 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[14:45:57] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[14:46:18] 10. Жду окончания паузы 40 с
+      Осталось ждать: 8.852 с
+
+[14:46:27] 11. Размораживаю старый coord1
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+zk-failover-coord1-1
+      coord1 разморожен, статус: running
+      Пауза длилась 40.1 с
+
+[14:46:27] 12. Жду попытки публикации coord1
+      PUBLISH_REJECTED результат отклонён получателем (epoch=1)
+
+[14:46:49] 13. Результаты приёмника sink
+      2026-10-27T11:46:18.278Z [sink] ACCEPTED  результат от coord2: эпоха 2 -> result_1_epoch2_coord2.json
+      2026-10-27T11:46:47.868Z [sink] REJECTED  результат от coord1: эпоха 1 < 2
+
+[14:46:49] 14. Проверяю результат через scripts/verify.py
+      Эталон (ДЗ №3): пар=36261, сумма частот=286936, sha256=7fcf1f679cbd6ebe…, топ-1=['MySQL', 'PHP', 3596]
+      result_1_epoch2_coord2.json: эпоха=2 узел=coord2 пар=36261 сумма=286936 sha256=7fcf1f679cbd6ebe… -> СОВПАЛО
+      Принятых результатов: 1
+      Принято результатов: 1, ожидалось: 1 -> OK
+
+[14:46:49] 15. Сохраняю материалы эксперимента
+       Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+       [4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+       
+       [0mConnecting to zoo1:2181
+       2026-10-27 11:46:49,659 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:zookeeper.version=3.9.6-a355171b081b5b60749db8f19cca1528b0df936f, built on 2026-09-03 19:29 UTC
+       2026-10-27 11:46:49,660 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:host.name=zoo1
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.version=17.0.20.1
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.vendor=Eclipse Adoptium
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.home=/opt/java/openjdk
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.class.path=/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/classes:/apache-zookeeper-3.9.6-bin/bin/../build/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../build/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-prometheus-metrics-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-jute-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/snappy-java-1.1.10.5.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/slf4j-api-2.0.13.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_servlet-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_hotspot-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_common-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-unix-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-epoll-4.1.137.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-classes-epoll-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-classes-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-windows-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-resolver-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-handler-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-codec-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-buffer-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/metrics-core-4.1.12.1.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-core-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-classic-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jline-3.30.14-jdk8.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-ajax-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-servlet-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-server-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-security-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-io-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-http-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/javax.servlet-api-3.1.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-databind-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-core-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-annotations-2.22.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-io-2.17.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-cli-1.5.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/audience-annotations-0.12.0.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/src/main/resources/lib/*.jar:/conf:
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.io.tmpdir=/tmp
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.compiler=<NA>
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.name=Linux
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.arch=amd64
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.version=7.0.0-38-generic
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.name=root
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.home=/root
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.dir=/apache-zookeeper-3.9.6-bin
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.free=218MB
+       2026-10-27 11:46:49,661 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.max=256MB
+       2026-10-27 11:46:49,662 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.total=232MB
+       2026-10-27 11:46:49,663 [myid:] - INFO  [main:o.a.z.ZooKeeper@635] - Initiating client connection, connectString=zoo1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain$MyWatcher@2b546384
+       2026-10-27 11:46:49,668 [myid:] - INFO  [main:o.a.z.c.X509Util@84] - Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+       2026-10-27 11:46:49,672 [myid:] - INFO  [main:o.a.z.ClientCnxnSocket@235] - jute.maxbuffer value is 1048575 Bytes
+       2026-10-27 11:46:49,676 [myid:] - INFO  [main:o.a.z.ClientCnxn@1734] - zookeeper.request.timeout value is 0. feature enabled=false
+       2026-10-27 11:46:49,679 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1170] - Opening socket connection to server zoo1/10.89.3.4:2181.
+       2026-10-27 11:46:49,680 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1172] - SASL config status: Will not attempt to authenticate using SASL (unknown error)
+       2026-10-27 11:46:49,684 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1006] - Socket connection established, initiating session, client: /10.89.3.4:51714, server: zoo1/10.89.3.4:2181
+       2026-10-27 11:46:49,688 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1438] - Session establishment complete on server zoo1/10.89.3.4:2181, session id = 0x10001e821820010, negotiated timeout = 30000
+       
+       WATCHER::
+       
+       WatchedEvent state:SyncConnected type:None path:null zxid: -1
+       2
+       2026-10-27 11:46:49,692 [myid:] - INFO  [main:o.a.z.u.ServiceUtils@45] - Exiting JVM with code 0
+
+[14:46:50] 16. Останавливаю координаторы и sink
+    $ docker compose kill coord1 coord2 sink
+      
+      [0m Container zk-failover-sink-1  Killing
+       Container zk-failover-sink-1  Killed
+
+============================================================
+ ИТОГ ЭТАПА 4
+   смена лидера:          10.1 с после заморозки
+   принято результатов:   1 (ожидалось 1) -> OK
+   журналы и материалы:   logs/stage4/
+============================================================

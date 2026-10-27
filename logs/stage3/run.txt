@@ -1,0 +1,2442 @@
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ (защита по эпохе ВЫКЛЮЧЕНА: получатель примет любую запись)
+ Запуск: Tue Oct 27 01:31:14 PM MSK 2026
+============================================================
+
+[13:31:14] 1. Убираю контейнеры прошлых запусков и запись в ZooKeeper (чтобы эпоха началась с 1)
+    $ docker compose rm -sf coord1 coord2 sink
+      
+      [0m Container zk-failover-coord2-1  Stopping
+       Container zk-failover-coord1-1  Stopping
+       Container zk-failover-coord1-1  Stopped
+       Container zk-failover-coord2-1  Error while Stopping
+      Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error: executing /usr/libexec/docker/cli-plugins/docker-compose rm -sf coord1 coord2 sink: exit status 1
+
+[13:31:15] 2. Проверяю, что три сервера ZooKeeper запущены
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+      ZooKeeper работает
+
+[13:31:16] 3. Запускаю получатель результата (sink) и первого координатора (coord1)
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:31:16+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.098MBSending build context to Docker daemon  3.146MBSending build context to Docker daemon  4.195MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.013MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon  4.195MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.013MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Recreate
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Recreated
+       Container zk-failover-coord1-1  Recreate
+       Container zk-failover-coord1-1  Recreated
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1   <- coord1 победил на выборах: он лидер
+
+[13:31:31] 4. Запускаю запасного координатора (coord2): он должен ждать
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-coord2-1  Recreate
+       Container zk-failover-coord2-1  Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error: executing /usr/libexec/docker/cli-plugins/docker-compose up -d --force-recreate coord2: exit status 1
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:37:27 PM MSK 2026
+============================================================
+
+[13:37:27] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (ef9746dad7caf4fed7d147e78bd46a982752fceb1fb05facbaa94482d08163aa)
+      Очистка coord2 (9dbd2835c5364e2406b500ce74def2db364ff4055c586e86c5f97b193aefd77a)
+      Очистка sink (19ce9db8688ede67f6f69127ce1adb80a47f1c735e599df94fca23ef693db0b4)
+
+[13:37:38] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+      ZooKeeper работает
+
+[13:37:39] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:37:39] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:37:39+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.017MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon  4.195MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.017MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:37:44] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-coord2-1  Recreate
+       Container zk-failover-coord2-1  Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error: executing /usr/libexec/docker/cli-plugins/docker-compose up -d --force-recreate coord2: exit status 1
+      Команда завершилась с кодом 1
+
+ОШИБКА: не удалось запустить coord2
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:38:53 PM MSK 2026
+============================================================
+
+[13:38:54] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (5b204c0a660f049cc160c47ce242ca7653d6ec0a9e238c5215d6afa6ee14168c)
+      Очистка coord2 (8790c062112f94e952d9eb3231e584fab737bc73fdf9b5bcf923ddf0e03bf424)
+      Очистка sink (c8d2ab7a5431ea8e7ab7ad9d4ab2a72d41135c9ba5b7975753b624cc7e7b21ac)
+
+[13:39:04] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+      ZooKeeper работает
+
+[13:39:05] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:39:05] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:39:06+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.018MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.018MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:39:10] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-coord2-1  Recreate
+       Container zk-failover-coord2-1  Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error response from daemon: container 475792fda4e5a54f87cc3d6828bfbc448500b37e01e4fb85c83fdd2d5f117da8 is running or paused, refusing to clean up: container state improper
+      Error: executing /usr/libexec/docker/cli-plugins/docker-compose up -d --force-recreate coord2: exit status 1
+      Команда завершилась с кодом 1
+
+ОШИБКА: не удалось запустить coord2
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:40:59 PM MSK 2026
+============================================================
+
+[13:41:00] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (5eb86b18f6824ddd794d55b86c08ba83e8993caa8c55ef1b936dc650cdb9fd3e)
+      Очистка coord2 (df0ad30dfec9d9aa2cb91890ef09203b091e3c227b3b558d4fc2bc64dd1cf5f5)
+      Очистка sink (785f95acaf66d5cc4b86258a74d31f14d4f5654527770894597df69cf5584b0a)
+
+[13:41:10] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+      ZooKeeper работает
+
+[13:41:11] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:41:11] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:41:11+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.018MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.018MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 969ca4b9d14b1a3720369f4cfa380305a62721c8fff5f89e6dc32bbb31afbcbc
+      --> 969ca4b9d14b
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache a54ab362f41ba5197d770d0c5055ec9ecac6f9d4ce49616a484e6e8431fbc2e2
+      --> a54ab362f41b
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache 86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> 86570fffd74b
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      86570fffd74b19287951ff16422f6d4958b76576109d2163d947a1e64a2a1d1f
+      Successfully built 86570fffd74b
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:41:16] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-sink-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[13:41:17] 6. Жду chunk 10 из 30
+
+[13:41:17] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 10:41:17.931659686 UTC
+
+[13:41:17] 8. Жду перехода лидерства к coord2
+./scripts/run_stage.sh: line 281: AUSE +%T.%3N): command not found
+
+[13:41:29] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 3 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 11.5 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[13:41:29] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[13:41:58] 10. Жду окончания паузы 40 с
+      Осталось ждать: 0.000 с
+
+[13:41:58] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.8 с
+
+[13:41:58] 12. Жду попытки публикации coord1
+      PUBLISHED результат принят (epoch=1)
+
+[13:41:59] 13. Результаты приёмника sink
+      2026-10-27T10:32:02.144Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_1_epoch1_coord1.json
+      2026-10-27T10:38:15.432Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_1_epoch1_coord1.json
+      2026-10-27T10:39:41.590Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_1_epoch1_coord1.json
+      2026-10-27T10:41:58.389Z [sink] ACCEPTED  результат от coord2: эпоха 2 -> result_1_epoch2_coord2.json
+
+[13:41:59] 14. Проверяю результат через scripts/verify.py
+      Эталон (ДЗ №3): пар=36261, сумма частот=286936, sha256=7fcf1f679cbd6ebe…, топ-1=['MySQL', 'PHP', 3596]
+      result_1_epoch2_coord2.json: эпоха=2 узел=coord2 пар=36261 сумма=286936 sha256=7fcf1f679cbd6ebe… -> СОВПАЛО
+      Принятых результатов: 1
+      Принято результатов: 1, ожидалось: 2 -> ПРОВЕРЬТЕ (ожидалось 2)
+
+[13:42:00] 15. Сохраняю материалы эксперимента
+       Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+       [4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+       
+       [0mConnecting to zoo1:2181
+       2026-10-27 10:42:00,314 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:zookeeper.version=3.9.6-a355171b081b5b60749db8f19cca1528b0df936f, built on 2026-09-03 19:29 UTC
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:host.name=zoo1
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.version=17.0.20.1
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.vendor=Eclipse Adoptium
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.home=/opt/java/openjdk
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.class.path=/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/classes:/apache-zookeeper-3.9.6-bin/bin/../build/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../build/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-prometheus-metrics-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-jute-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/snappy-java-1.1.10.5.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/slf4j-api-2.0.13.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_servlet-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_hotspot-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_common-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-unix-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-epoll-4.1.137.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-classes-epoll-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-classes-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-windows-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-resolver-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-handler-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-codec-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-buffer-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/metrics-core-4.1.12.1.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-core-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-classic-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jline-3.30.14-jdk8.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-ajax-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-servlet-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-server-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-security-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-io-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-http-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/javax.servlet-api-3.1.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-databind-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-core-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-annotations-2.22.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-io-2.17.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-cli-1.5.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/audience-annotations-0.12.0.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/src/main/resources/lib/*.jar:/conf:
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.io.tmpdir=/tmp
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.compiler=<NA>
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.name=Linux
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.arch=amd64
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.version=7.0.0-38-generic
+       2026-10-27 10:42:00,315 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.name=root
+       2026-10-27 10:42:00,316 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.home=/root
+       2026-10-27 10:42:00,316 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.dir=/apache-zookeeper-3.9.6-bin
+       2026-10-27 10:42:00,316 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.free=218MB
+       2026-10-27 10:42:00,316 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.max=256MB
+       2026-10-27 10:42:00,316 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.total=232MB
+       2026-10-27 10:42:00,317 [myid:] - INFO  [main:o.a.z.ZooKeeper@635] - Initiating client connection, connectString=zoo1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain$MyWatcher@2b546384
+       2026-10-27 10:42:00,320 [myid:] - INFO  [main:o.a.z.c.X509Util@84] - Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+       2026-10-27 10:42:00,323 [myid:] - INFO  [main:o.a.z.ClientCnxnSocket@235] - jute.maxbuffer value is 1048575 Bytes
+       2026-10-27 10:42:00,326 [myid:] - INFO  [main:o.a.z.ClientCnxn@1734] - zookeeper.request.timeout value is 0. feature enabled=false
+       2026-10-27 10:42:00,329 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1170] - Opening socket connection to server zoo1/10.89.3.5:2181.
+       2026-10-27 10:42:00,329 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1172] - SASL config status: Will not attempt to authenticate using SASL (unknown error)
+       2026-10-27 10:42:00,333 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1006] - Socket connection established, initiating session, client: /10.89.3.5:33228, server: zoo1/10.89.3.5:2181
+       2026-10-27 10:42:00,337 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1438] - Session establishment complete on server zoo1/10.89.3.5:2181, session id = 0x10001a660520008, negotiated timeout = 30000
+       
+       WATCHER::
+       
+       WatchedEvent state:SyncConnected type:None path:null zxid: -1
+       2
+       2026-10-27 10:42:00,340 [myid:] - INFO  [main:o.a.z.u.ServiceUtils@45] - Exiting JVM with code 0
+
+[13:42:00] 16. Останавливаю координаторы и sink
+    $ docker compose stop coord1 coord2 sink
+      
+      [0m Container zk-failover-coord2-1  Stopping
+       Container zk-failover-coord1-1  Stopping
+       Container zk-failover-coord2-1  Stopped
+       Container zk-failover-coord1-1  Error while Stopping
+      Error response from daemon: container 55dafd01b978358660cce3a9f52f80490b91b297cede049fdddadc7d5272f468 is running or paused, refusing to clean up: container state improper
+      Error: executing /usr/libexec/docker/cli-plugins/docker-compose stop coord1 coord2 sink: exit status 1
+      Команда завершилась с кодом 1
+      Предупреждение: не все контейнеры удалось остановить
+
+============================================================
+ ИТОГ ЭТАПА 3
+   смена лидера:          11.5 с после заморозки
+   принято результатов:   1 (ожидалось 2) -> ПРОВЕРЬТЕ (ожидалось 2)
+   журналы и материалы:   logs/stage3/
+============================================================
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:47:23 PM MSK 2026
+============================================================
+
+[13:47:23] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (55dafd01b978358660cce3a9f52f80490b91b297cede049fdddadc7d5272f468)
+      Очистка coord1 (55dafd01b978)
+      Очистка coord2 (731c30d755af291f792dd998e5b6dfcbb87d3987a88ec58a009dc155220bbf4e)
+      Очистка coord2 (731c30d755af)
+      Очистка sink (2c0170348cd602ca3c77a471dcfd566808c528a898f01c1ad3c67e91fd517784)
+      Очистка sink (2c0170348cd6)
+
+[13:47:26] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+      ZooKeeper работает
+
+[13:47:27] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:47:27] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:47:28+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:47:32] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[13:47:33] 6. Жду chunk 10 из 30
+
+[13:47:33] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 10:47:33.804674328 UTC
+
+[13:47:33] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 3 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ -364.4 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[13:47:33] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[13:47:33] 10. Жду окончания паузы 40 с
+      Осталось ждать: 39.877 с
+
+[13:48:13] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.1 с
+
+[13:48:13] 12. Жду попытки публикации coord1
+      PUBLISHED результат принят (epoch=1)
+
+[13:48:14] 13. Результаты приёмника sink
+      2026-10-27T10:32:02.144Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_1_epoch1_coord1.json
+      2026-10-27T10:38:15.432Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_1_epoch1_coord1.json
+      2026-10-27T10:39:41.590Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_1_epoch1_coord1.json
+      2026-10-27T10:41:58.389Z [sink] ACCEPTED  результат от coord2: эпоха 2 -> result_1_epoch2_coord2.json
+
+[13:48:14] 14. Проверяю результат через scripts/verify.py
+      Эталон (ДЗ №3): пар=36261, сумма частот=286936, sha256=7fcf1f679cbd6ebe…, топ-1=['MySQL', 'PHP', 3596]
+      Принятых результатов: 0
+      Предупреждение: проверка результата завершилась с ошибкой
+      Принято результатов: 0, ожидалось: 2 -> ПРОВЕРЬТЕ (ожидалось 2)
+
+[13:48:15] 15. Сохраняю материалы эксперимента
+       Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+       [4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+       
+       [0mConnecting to zoo1:2181
+       2026-10-27 10:48:15,407 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:zookeeper.version=3.9.6-a355171b081b5b60749db8f19cca1528b0df936f, built on 2026-09-03 19:29 UTC
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:host.name=zoo1
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.version=17.0.20.1
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.vendor=Eclipse Adoptium
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.home=/opt/java/openjdk
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.class.path=/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/classes:/apache-zookeeper-3.9.6-bin/bin/../build/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../build/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-prometheus-metrics-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-jute-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/snappy-java-1.1.10.5.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/slf4j-api-2.0.13.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_servlet-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_hotspot-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_common-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-unix-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-epoll-4.1.137.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-classes-epoll-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-classes-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-windows-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-resolver-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-handler-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-codec-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-buffer-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/metrics-core-4.1.12.1.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-core-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-classic-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jline-3.30.14-jdk8.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-ajax-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-servlet-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-server-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-security-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-io-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-http-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/javax.servlet-api-3.1.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-databind-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-core-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-annotations-2.22.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-io-2.17.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-cli-1.5.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/audience-annotations-0.12.0.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/src/main/resources/lib/*.jar:/conf:
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.io.tmpdir=/tmp
+       2026-10-27 10:48:15,409 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.compiler=<NA>
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.name=Linux
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.arch=amd64
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.version=7.0.0-38-generic
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.name=root
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.home=/root
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.dir=/apache-zookeeper-3.9.6-bin
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.free=218MB
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.max=256MB
+       2026-10-27 10:48:15,410 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.total=232MB
+       2026-10-27 10:48:15,412 [myid:] - INFO  [main:o.a.z.ZooKeeper@635] - Initiating client connection, connectString=zoo1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain$MyWatcher@2b546384
+       2026-10-27 10:48:15,416 [myid:] - INFO  [main:o.a.z.c.X509Util@84] - Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+       2026-10-27 10:48:15,420 [myid:] - INFO  [main:o.a.z.ClientCnxnSocket@235] - jute.maxbuffer value is 1048575 Bytes
+       2026-10-27 10:48:15,425 [myid:] - INFO  [main:o.a.z.ClientCnxn@1734] - zookeeper.request.timeout value is 0. feature enabled=false
+       2026-10-27 10:48:15,427 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1170] - Opening socket connection to server zoo1/10.89.3.5:2181.
+       2026-10-27 10:48:15,427 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1172] - SASL config status: Will not attempt to authenticate using SASL (unknown error)
+       2026-10-27 10:48:15,431 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1006] - Socket connection established, initiating session, client: /10.89.3.5:38954, server: zoo1/10.89.3.5:2181
+       2026-10-27 10:48:15,435 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1438] - Session establishment complete on server zoo1/10.89.3.5:2181, session id = 0x10001a66052000c, negotiated timeout = 30000
+       
+       WATCHER::
+       
+       WatchedEvent state:SyncConnected type:None path:null zxid: -1
+       2
+       2026-10-27 10:48:15,438 [myid:] - INFO  [main:o.a.z.u.ServiceUtils@45] - Exiting JVM with code 0
+
+[13:48:15] 16. Останавливаю координаторы и sink
+    $ docker compose stop coord1 coord2 sink
+      
+      [0m Container zk-failover-coord2-1  Stopping
+       Container zk-failover-coord1-1  Stopping
+       Container zk-failover-coord1-1  Error while Stopping
+       Container zk-failover-coord2-1  Stopped
+      Error response from daemon: container 5be654401615a7d2d7d65d5f57b6ffc1620b64aa3cf0f97a6dd8e4c13fab83a6 is running or paused, refusing to clean up: container state improper
+      Error: executing /usr/libexec/docker/cli-plugins/docker-compose stop coord1 coord2 sink: exit status 1
+      Команда завершилась с кодом 1
+      Предупреждение: не все контейнеры удалось остановить
+
+============================================================
+ ИТОГ ЭТАПА 3
+   смена лидера:          -364.4 с после заморозки
+   принято результатов:   0 (ожидалось 2) -> ПРОВЕРЬТЕ (ожидалось 2)
+   журналы и материалы:   logs/stage3/
+============================================================
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:49:12 PM MSK 2026
+============================================================
+
+[13:49:12] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (5be654401615)
+      Очистка coord1 (5be654401615a7d2d7d65d5f57b6ffc1620b64aa3cf0f97a6dd8e4c13fab83a6)
+      Очистка coord2 (7bc54509885a)
+      Очистка coord2 (7bc54509885a172f5b8f08315586943283c8bfcdd25e8e58802a57276506825c)
+      Очистка sink (87cd1d647730)
+      Очистка sink (87cd1d647730f156ece60b4c793a616f60c9d67e9afc41ddec257b9c31246fc5)
+
+[13:49:15] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+      ZooKeeper работает
+
+[13:49:15] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:49:16] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:49:16+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.021MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.021MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:49:21] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[13:49:22] 6. Жду chunk 10 из 30
+
+[13:49:30] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 10:49:30.754789646 UTC
+
+[13:49:30] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 10.7 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[13:49:41] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[13:50:02] 10. Жду окончания паузы 40 с
+      Осталось ждать: 8.279 с
+
+[13:50:10] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.1 с
+
+[13:50:10] 12. Жду попытки публикации coord1
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:53:58 PM MSK 2026
+============================================================
+
+[13:53:58] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord2 (5148859095a8)
+      Очистка coord2 (5148859095a8f1ff70ed183b16fa0460aae7f8525cf138447b931a35e19e8e49)
+      Очистка sink (891ea4121b33)
+      Очистка sink (891ea4121b33298009ee7d148ac801c38392bf78e4e12434db5994f8165217c6)
+
+[13:53:59] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Starting
+       Container zk-failover-zoo1-1  Starting
+       Container zk-failover-zoo2-1  Starting
+       Container zk-failover-zoo1-1  Started
+       Container zk-failover-zoo2-1  Started
+       Container zk-failover-zoo3-1  Started
+      ZooKeeper работает
+
+[13:54:02] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:54:03] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:54:03+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.098MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.022MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.098MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.022MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:54:08] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[13:54:09] 6. Жду chunk 10 из 30
+
+[13:54:17] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 10:54:17.636352828 UTC
+
+[13:54:17] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 11.8 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[13:54:30] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[13:54:50] 10. Жду окончания паузы 40 с
+      Осталось ждать: 7.292 с
+
+[13:54:57] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.1 с
+
+[13:54:57] 12. Жду попытки публикации coord1
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 01:59:06 PM MSK 2026
+============================================================
+
+[13:59:07] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (b2a428a42070fccf6dd461a7bf3d31ed326c248763152ac449bdbaf1644ae497)
+      Очистка sink (e0cf5980f986acd030c62576f96d1f7ac82c5733d50770fe3332243766a354e8)
+
+[13:59:07] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+      ZooKeeper работает
+
+[13:59:07] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[13:59:08] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T13:59:08+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[13:59:13] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[13:59:14] 6. Жду chunk 10 из 30
+
+[13:59:14] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 10:59:14.292453329 UTC
+
+[13:59:14] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ -284.9 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[13:59:14] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[13:59:14] 10. Жду окончания паузы 40 с
+      Осталось ждать: 39.872 с
+
+[13:59:54] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.1 с
+
+[13:59:54] 12. Жду попытки публикации coord1
+
+ОШИБКА: не дождались: публикация coord1 (файл logs/stage3/coord1.log, шаблон 'PUBLISHED|PUBLISH_REJECTED')
+      
+
+[14:02:25] 13. Результаты приёмника sink
+      2026-10-27T10:54:50.320Z [sink] ACCEPTED  результат от coord2: эпоха 2 -> result_1_epoch2_coord2.json
+
+[14:02:25] 14. Проверяю результат через scripts/verify.py
+      Эталон (ДЗ №3): пар=36261, сумма частот=286936, sha256=7fcf1f679cbd6ebe…, топ-1=['MySQL', 'PHP', 3596]
+      Принятых результатов: 0
+      Предупреждение: проверка результата завершилась с ошибкой
+      Принято результатов: 0, ожидалось: 2 -> ПРОВЕРЬТЕ (ожидалось 2)
+
+[14:02:25] 15. Сохраняю материалы эксперимента
+       Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+       [4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+       
+       [0mConnecting to zoo1:2181
+       2026-10-27 11:02:25,907 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:zookeeper.version=3.9.6-a355171b081b5b60749db8f19cca1528b0df936f, built on 2026-09-03 19:29 UTC
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:host.name=zoo1
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.version=17.0.20.1
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.vendor=Eclipse Adoptium
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.home=/opt/java/openjdk
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.class.path=/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/classes:/apache-zookeeper-3.9.6-bin/bin/../build/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../build/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-prometheus-metrics-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-jute-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/snappy-java-1.1.10.5.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/slf4j-api-2.0.13.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_servlet-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_hotspot-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_common-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-unix-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-epoll-4.1.137.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-classes-epoll-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-classes-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-windows-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-resolver-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-handler-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-codec-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-buffer-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/metrics-core-4.1.12.1.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-core-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-classic-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jline-3.30.14-jdk8.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-ajax-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-servlet-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-server-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-security-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-io-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-http-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/javax.servlet-api-3.1.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-databind-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-core-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-annotations-2.22.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-io-2.17.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-cli-1.5.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/audience-annotations-0.12.0.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/src/main/resources/lib/*.jar:/conf:
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+       2026-10-27 11:02:25,910 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.io.tmpdir=/tmp
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.compiler=<NA>
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.name=Linux
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.arch=amd64
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.version=7.0.0-38-generic
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.name=root
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.home=/root
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.dir=/apache-zookeeper-3.9.6-bin
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.free=218MB
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.max=256MB
+       2026-10-27 11:02:25,911 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.total=232MB
+       2026-10-27 11:02:25,913 [myid:] - INFO  [main:o.a.z.ZooKeeper@635] - Initiating client connection, connectString=zoo1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain$MyWatcher@2b546384
+       2026-10-27 11:02:25,920 [myid:] - INFO  [main:o.a.z.c.X509Util@84] - Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+       2026-10-27 11:02:25,924 [myid:] - INFO  [main:o.a.z.ClientCnxnSocket@235] - jute.maxbuffer value is 1048575 Bytes
+       2026-10-27 11:02:25,930 [myid:] - INFO  [main:o.a.z.ClientCnxn@1734] - zookeeper.request.timeout value is 0. feature enabled=false
+       2026-10-27 11:02:25,935 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1170] - Opening socket connection to server zoo1/10.89.3.23:2181.
+       2026-10-27 11:02:25,936 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1172] - SASL config status: Will not attempt to authenticate using SASL (unknown error)
+       2026-10-27 11:02:25,942 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1006] - Socket connection established, initiating session, client: /10.89.3.23:52456, server: zoo1/10.89.3.23:2181
+       2026-10-27 11:02:25,947 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1438] - Session establishment complete on server zoo1/10.89.3.23:2181, session id = 0x10001c441740004, negotiated timeout = 30000
+       
+       WATCHER::
+       
+       WatchedEvent state:SyncConnected type:None path:null zxid: -1
+       2
+       2026-10-27 11:02:25,950 [myid:] - INFO  [main:o.a.z.u.ServiceUtils@45] - Exiting JVM with code 0
+
+[14:02:26] 16. Останавливаю координаторы и sink
+    $ docker compose stop coord1 coord2 sink
+      
+      [0m Container zk-failover-coord1-1  Stopping
+       Container zk-failover-coord1-1  Stopped
+       Container zk-failover-sink-1  Stopping
+       Container zk-failover-sink-1  Stopped
+
+============================================================
+ ИТОГ ЭТАПА 3
+   смена лидера:          -284.9 с после заморозки
+   принято результатов:   0 (ожидалось 2) -> ПРОВЕРЬТЕ (ожидалось 2)
+   журналы и материалы:   logs/stage3/
+============================================================
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:14:29 PM MSK 2026
+============================================================
+
+[14:14:30] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (946af199007a)
+      Очистка coord1 (946af199007a1394b51db6ed8fe51390f58da35973b2cd737f0c856275da7817)
+      Очистка sink (7a60da106784)
+      Очистка sink (7a60da1067844d3a2e5bf27818cdf3afa41cbcdca881bebaf7a84e1d719746a1)
+
+[14:14:30] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+      ZooKeeper работает
+
+[14:14:30] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[14:14:31] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:14:31+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.022MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.022MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+
+ОШИБКА: не дождались: coord1 стал лидером (файл logs/stage3/coord1.log, шаблон 'BECAME_LEADER')
+       <- coord1 стал лидером
+
+[14:16:06] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:16:33 PM MSK 2026
+============================================================
+
+[14:16:33] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (c68cf27847c2)
+      Очистка coord1 (c68cf27847c2f7f061f09e617a24eaef6213ead063ae14aa5ee0443155458a25)
+      Очистка coord2 (16be9ad58823)
+      Очистка coord2 (16be9ad588232dd1e7ef9310b8510ac05b2cdbe44ad146bd3b1b29420b69c543)
+      Очистка sink (3b8750876d87)
+      Очистка sink (3b8750876d870668a2223680ac3184a30a6fb4c91e083e8f86c1999b8f7aee66)
+
+[14:16:34] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+      ZooKeeper работает
+
+[14:16:34] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:16:35] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:16:35+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.022MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.022MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:23:37 PM MSK 2026
+============================================================
+
+[14:23:38] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (36448636f005)
+      Очистка coord1 (36448636f0059a979b4b1daab3f96cce05e2eb4951153dab8d2eae278f324e43)
+      Очистка sink (0aa08aab9f2d)
+      Очистка sink (0aa08aab9f2d087fff854d9745f148a015f24e15d8d8ead538ae67c39c57ed31)
+
+[14:23:38] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+      ZooKeeper работает
+
+[14:23:39] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:23:39] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:23:39+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:27:33 PM MSK 2026
+============================================================
+
+[14:27:34] 1. Очищаю контейнеры и состояние предыдущего запуска
+
+[14:27:34] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Network zk-failover_default  Creating
+       Network zk-failover_default  Created
+       Container zk-failover-zoo1-1  Creating
+       Container zk-failover-zoo3-1  Creating
+       Container zk-failover-zoo2-1  Creating
+       Container zk-failover-zoo1-1  Created
+       Container zk-failover-zoo2-1  Created
+       Container zk-failover-zoo3-1  Created
+       Container zk-failover-zoo1-1  Starting
+       Container zk-failover-zoo3-1  Starting
+       Container zk-failover-zoo2-1  Starting
+       Container zk-failover-zoo3-1  Started
+       Container zk-failover-zoo2-1  Started
+       Container zk-failover-zoo1-1  Started
+      ZooKeeper работает
+
+[14:27:38] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:27:39] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:27:39+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon  4.195MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.023MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+
+ОШИБКА: не дождались: coord1 стал лидером (файл logs/stage3/coord1.log, шаблон 'BECAME_LEADER')
+       <- coord1 стал лидером
+
+[14:29:13] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+
+ОШИБКА: не дождались: coord2 перешёл в STANDBY (файл logs/stage3/coord2.log, шаблон 'STANDBY')
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:31:30 PM MSK 2026
+============================================================
+
+[14:31:31] 1. Очищаю контейнеры и состояние предыдущего запуска
+
+[14:31:31] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo2-1  Creating
+       Container zk-failover-zoo3-1  Creating
+       Container zk-failover-zoo3-1  Created
+       Container zk-failover-zoo2-1  Created
+       Container zk-failover-zoo1-1  Starting
+       Container zk-failover-zoo3-1  Starting
+       Container zk-failover-zoo2-1  Starting
+       Container zk-failover-zoo2-1  Started
+       Container zk-failover-zoo1-1  Started
+       Container zk-failover-zoo3-1  Started
+      ZooKeeper работает
+
+[14:31:35] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:31:35] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:31:35+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.024MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.024MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:33:08 PM MSK 2026
+============================================================
+
+[14:33:09] 1. Очищаю контейнеры и состояние предыдущего запуска
+
+[14:33:09] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Network zk-failover_default  Creating
+       Network zk-failover_default  Created
+       Container zk-failover-zoo2-1  Creating
+       Container zk-failover-zoo3-1  Creating
+       Container zk-failover-zoo1-1  Creating
+       Container zk-failover-zoo1-1  Created
+       Container zk-failover-zoo2-1  Created
+       Container zk-failover-zoo3-1  Created
+       Container zk-failover-zoo2-1  Starting
+       Container zk-failover-zoo1-1  Starting
+       Container zk-failover-zoo3-1  Starting
+       Container zk-failover-zoo2-1  Started
+       Container zk-failover-zoo1-1  Started
+       Container zk-failover-zoo3-1  Started
+      ZooKeeper работает
+
+[14:33:13] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:33:14] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:33:14+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.024MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.024MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[14:33:19] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[14:33:20] 6. Жду chunk 10 из 30
+
+[14:33:28] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 11:33:28.675688457 UTC
+
+[14:33:28] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 12.7 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[14:33:41] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[14:34:02] 10. Жду окончания паузы 40 с
+      Осталось ждать: 6.045 с
+
+[14:34:08] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.1 с
+
+[14:34:08] 12. Жду попытки публикации coord1
+
+ОШИБКА: не дождались: публикация coord1 (файл logs/stage3/coord1.log, шаблон 'PUBLISHED|PUBLISH_REJECTED')
+      
+
+[14:36:39] 13. Результаты приёмника sink
+      2026-10-27T11:34:02.310Z [sink] ACCEPTED  результат от coord2: эпоха 2 -> result_1_epoch2_coord2.json
+
+[14:36:39] 14. Проверяю результат через scripts/verify.py
+      Эталон (ДЗ №3): пар=36261, сумма частот=286936, sha256=7fcf1f679cbd6ebe…, топ-1=['MySQL', 'PHP', 3596]
+      result_1_epoch2_coord2.json: эпоха=2 узел=coord2 пар=36261 сумма=286936 sha256=7fcf1f679cbd6ebe… -> СОВПАЛО
+      Принятых результатов: 1
+      Принято результатов: 1, ожидалось: 2 -> ПРОВЕРЬТЕ (ожидалось 2)
+
+[14:36:39] 15. Сохраняю материалы эксперимента
+       Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+       [4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+       
+       [0mConnecting to zoo1:2181
+       2026-10-27 11:36:39,814 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:zookeeper.version=3.9.6-a355171b081b5b60749db8f19cca1528b0df936f, built on 2026-09-03 19:29 UTC
+       2026-10-27 11:36:39,816 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:host.name=zoo1
+       2026-10-27 11:36:39,816 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.version=17.0.20.1
+       2026-10-27 11:36:39,816 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.vendor=Eclipse Adoptium
+       2026-10-27 11:36:39,816 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.home=/opt/java/openjdk
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.class.path=/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/classes:/apache-zookeeper-3.9.6-bin/bin/../build/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../build/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-prometheus-metrics-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-jute-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/snappy-java-1.1.10.5.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/slf4j-api-2.0.13.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_servlet-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_hotspot-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_common-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-unix-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-epoll-4.1.137.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-classes-epoll-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-classes-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-windows-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-resolver-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-handler-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-codec-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-buffer-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/metrics-core-4.1.12.1.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-core-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-classic-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jline-3.30.14-jdk8.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-ajax-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-servlet-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-server-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-security-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-io-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-http-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/javax.servlet-api-3.1.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-databind-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-core-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-annotations-2.22.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-io-2.17.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-cli-1.5.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/audience-annotations-0.12.0.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/src/main/resources/lib/*.jar:/conf:
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.io.tmpdir=/tmp
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.compiler=<NA>
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.name=Linux
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.arch=amd64
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.version=7.0.0-38-generic
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.name=root
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.home=/root
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.dir=/apache-zookeeper-3.9.6-bin
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.free=218MB
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.max=256MB
+       2026-10-27 11:36:39,817 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.total=232MB
+       2026-10-27 11:36:39,819 [myid:] - INFO  [main:o.a.z.ZooKeeper@635] - Initiating client connection, connectString=zoo1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain$MyWatcher@2b546384
+       2026-10-27 11:36:39,823 [myid:] - INFO  [main:o.a.z.c.X509Util@84] - Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+       2026-10-27 11:36:39,827 [myid:] - INFO  [main:o.a.z.ClientCnxnSocket@235] - jute.maxbuffer value is 1048575 Bytes
+       2026-10-27 11:36:39,832 [myid:] - INFO  [main:o.a.z.ClientCnxn@1734] - zookeeper.request.timeout value is 0. feature enabled=false
+       2026-10-27 11:36:39,834 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1170] - Opening socket connection to server zoo1/10.89.3.4:2181.
+       2026-10-27 11:36:39,835 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1172] - SASL config status: Will not attempt to authenticate using SASL (unknown error)
+       2026-10-27 11:36:39,839 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1006] - Socket connection established, initiating session, client: /10.89.3.4:56504, server: zoo1/10.89.3.4:2181
+       2026-10-27 11:36:39,844 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1438] - Session establishment complete on server zoo1/10.89.3.4:2181, session id = 0x10001e821820003, negotiated timeout = 30000
+       
+       WATCHER::
+       
+       WatchedEvent state:SyncConnected type:None path:null zxid: -1
+       2
+       2026-10-27 11:36:39,848 [myid:] - INFO  [main:o.a.z.u.ServiceUtils@45] - Exiting JVM with code 0
+
+[14:36:40] 16. Останавливаю координаторы и sink
+    $ docker compose kill coord1 coord2 sink
+      
+      [0m Container zk-failover-sink-1  Killing
+       Container zk-failover-sink-1  Killed
+
+============================================================
+ ИТОГ ЭТАПА 3
+   смена лидера:          12.7 с после заморозки
+   принято результатов:   1 (ожидалось 2) -> ПРОВЕРЬТЕ (ожидалось 2)
+   журналы и материалы:   logs/stage3/
+============================================================
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:38:17 PM MSK 2026
+============================================================
+
+[14:38:17] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (cf55534f31d8)
+      Очистка coord1 (cf55534f31d8002fd19c9de5793adcdd8a33fb9d708e5c167e8a5fdf36b90134)
+      Очистка coord2 (1ffc948d01ba)
+      Очистка coord2 (1ffc948d01babf504e6d179a982a412ca3079630d5f6845ca37324a898c257d3)
+      Очистка sink (de052c60d08f)
+      Очистка sink (de052c60d08fe2d222e5b46b98fd9fecec95b94a341b093870d4f9a475055359)
+
+[14:38:19] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+      ZooKeeper работает
+
+[14:38:19] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[14:38:20] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:38:20+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon  4.195MBSending build context to Docker daemon  5.244MBSending build context to Docker daemon  6.293MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.342MBSending build context to Docker daemon  8.026MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.026MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[14:38:25] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[14:38:26] 6. Жду chunk 10 из 30
+
+[14:38:34] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 11:38:34.771872950 UTC
+
+[14:38:34] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 12.6 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[14:38:48] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[14:39:08] 10. Жду окончания паузы 40 с
+      Осталось ждать: 6.429 с
+
+[14:39:14] 11. Размораживаю старый coord1
+    $ docker compose unpause coord1
+      
+      [0m
+      Пауза длилась 40.2 с
+
+[14:39:14] 12. Жду попытки публикации coord1
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:39:57 PM MSK 2026
+============================================================
+
+[14:39:58] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (f722b127799e)
+      Очистка coord1 (f722b127799e359c5fad4e95413964c33ebb6abe02c9cd2b2c3af0e025a00828)
+      Очистка coord2 (4ebf97046aef)
+      Очистка coord2 (4ebf97046aef59c4f3f709206c93577ae774f31b49bff837e9d6f98ba970aa0d)
+      Очистка sink (5cc0bf4861d7)
+      Очистка sink (5cc0bf4861d701dae05989f39adfb97538895332f193a4ff84c81b898f835d43)
+
+[14:40:00] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+      ZooKeeper работает
+
+[14:40:00] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[14:40:01] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      Команда завершилась с кодом 1
+
+ОШИБКА: не удалось запустить sink и coord1
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:40:13 PM MSK 2026
+============================================================
+
+[14:40:14] 1. Очищаю контейнеры и состояние предыдущего запуска
+
+[14:40:14] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+      ZooKeeper работает
+
+[14:40:14] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+      Узел отсутствует или deleteall не выполнен.
+      Проверяю, что запуск координаторов возможен.
+
+[14:40:15] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:40:15+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.026MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.026MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[14:40:20] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[14:40:21] 6. Жду chunk 10 из 30
+
+[14:40:29] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 11:40:29.578029861 UTC
+
+[14:40:29] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 7.8 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[14:40:37] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[14:40:58] 10. Жду окончания паузы 40 с
+      Осталось ждать: 11.056 с
+
+[14:41:09] 11. Размораживаю старый coord1
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+[4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+
+[0mEmulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+Error: name or ID cannot be empty
+
+ОШИБКА: не удалось разморозить coord1
+============================================================
+ Этап 3: приостановка лидера, FENCING=0
+ Защита по эпохе ВЫКЛЮЧЕНА
+ Получатель может принять запись старого лидера
+ Запуск: Tue Oct 27 02:43:01 PM MSK 2026
+============================================================
+
+[14:43:02] 1. Очищаю контейнеры и состояние предыдущего запуска
+      Очистка coord1 (4a78f64bd236)
+      Очистка coord1 (4a78f64bd236146e286e632bc5aedfab5fc8e4bd5df93adff91e1b4d6b33fbcf)
+      Очистка coord2 (09d9f764d486)
+      Очистка coord2 (09d9f764d4860ac1334c8ac8abec2e58e310cf60799ca9cedadcc37ab30089bc)
+      Очистка sink (3e76400ed424)
+      Очистка sink (3e76400ed4249d67668e6674e1d12ea1da278adc134f66cd9573339f1dcca5ff)
+
+[14:43:04] 2. Запускаю и проверяю три сервера ZooKeeper
+    $ docker compose up -d zoo1 zoo2 zoo3
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-zoo1-1  Running
+      ZooKeeper работает
+
+[14:43:04] 3. Сбрасываю состояние выборов лидера в ZooKeeper
+
+[14:43:05] 4. Запускаю sink и первого координатора coord1
+    $ docker compose up -d --build --force-recreate sink coord1
+      
+      [0mtime="2026-10-27T14:43:05+03:00" level=warning msg="Docker Compose is configured to build using Bake, but buildkit isn't enabled"
+       Service sink  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.027MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service sink  Built
+       Service coord1  Building
+      Sending build context to Docker daemon  524.4kBSending build context to Docker daemon  1.573MBSending build context to Docker daemon  2.622MBSending build context to Docker daemon  3.671MBSending build context to Docker daemon   4.72MBSending build context to Docker daemon  5.768MBSending build context to Docker daemon  6.817MBSending build context to Docker daemon  7.866MBSending build context to Docker daemon  8.027MB
+      STEP 1/7: FROM python:3.12-slim
+      STEP 2/7: WORKDIR /app
+      --> Using cache 2dcc54d9ea7b72e8143c5790d4dd5720b5773d5f0c434f94addf44ef6a214e88
+      --> 2dcc54d9ea7b
+      STEP 3/7: COPY requirements.txt .
+      --> Using cache d9de54b4ceabd8fa87bf4993f013f42d55f35a26f85c9eaf33419b1b6457a9b0
+      --> d9de54b4ceab
+      STEP 4/7: RUN pip install --no-cache-dir -r requirements.txt
+      --> Using cache 6510a75386cb5ac1aed0cba7a1816209e19fa873958571db092e0786d84ed0a1
+      --> 6510a75386cb
+      STEP 5/7: COPY src/ /app/src/
+      --> Using cache 45971637d12d5b6894380fb5ca78c75cb055c044f4300260030901286feff54e
+      --> 45971637d12d
+      STEP 6/7: ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app/src
+      --> Using cache 518e8586cfc6f6398ee84753041a830c70745dac55ecd6db3812698a163b777b
+      --> 518e8586cfc6
+      STEP 7/7: LABEL "com.docker.compose.image.builder"="classic"
+      --> Using cache e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      COMMIT docker.io/library/zk-failover-app:latest
+      --> e92826ac69ee
+      Successfully tagged docker.io/library/zk-failover-app:latest
+      e92826ac69ee5446e5a55c242d01628b251cedbb291cb4051a2edf2884d522e3
+      Successfully built e92826ac69ee
+      Successfully tagged zk-failover-app
+       Service coord1  Built
+       coord1  Built
+       sink  Built
+       Container zk-failover-sink-1  Creating
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-sink-1  Created
+       Container zk-failover-coord1-1  Creating
+       Container zk-failover-coord1-1  Created
+       Container zk-failover-sink-1  Starting
+       Container zk-failover-sink-1  Started
+       Container zk-failover-coord1-1  Starting
+       Container zk-failover-coord1-1  Started
+      BECAME_LEADER epoch=1 <- coord1 стал лидером
+
+[14:43:10] 5. Запускаю резервного координатора coord2
+    $ docker compose up -d --force-recreate coord2
+      
+      [0m Container zk-failover-zoo3-1  Running
+       Container zk-failover-zoo1-1  Running
+       Container zk-failover-sink-1  Running
+       Container zk-failover-zoo2-1  Running
+       Container zk-failover-coord2-1  Creating
+       Container zk-failover-coord2-1  Created
+       Container zk-failover-coord2-1  Starting
+       Container zk-failover-coord2-1  Started
+      coord2 ожидает своей очереди (STANDBY)
+
+[14:43:11] 6. Жду chunk 10 из 30
+
+[14:43:19] 7. Замораживаю coord1
+    $ docker compose pause coord1
+      
+      [0m Container zk-failover-coord1-1  Paused
+      Время заморозки: 11:43:19.372384557 UTC
+
+[14:43:19] 8. Жду перехода лидерства к coord2
+      BECAME_LEADER epoch=2
+      RESUME с чекпоинта: продолжаю с части 11 из 30
+      >>> ЛИДЕР СМЕНИЛСЯ ЧЕРЕЗ 8.0 с ПОСЛЕ ЗАМОРОЗКИ <<<
+
+[14:43:27] 9. Жду публикации результата coord2
+      PUBLISHED результат принят (epoch=2)
+
+[14:43:48] 10. Жду окончания паузы 40 с
+      Осталось ждать: 11.047 с
+
+[14:43:59] 11. Размораживаю старый coord1
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+zk-failover-coord1-1
+      coord1 разморожен, статус: running
+      Пауза длилась 40.1 с
+
+[14:43:59] 12. Жду попытки публикации coord1
+      PUBLISHED результат принят (epoch=1)
+
+[14:44:21] 13. Результаты приёмника sink
+      2026-10-27T11:43:48.300Z [sink] ACCEPTED  результат от coord2: эпоха 2 -> result_1_epoch2_coord2.json
+      2026-10-27T11:44:19.986Z [sink] ACCEPTED  результат от coord1: эпоха 1 -> result_2_epoch1_coord1.json
+
+[14:44:21] 14. Проверяю результат через scripts/verify.py
+      Эталон (ДЗ №3): пар=36261, сумма частот=286936, sha256=7fcf1f679cbd6ebe…, топ-1=['MySQL', 'PHP', 3596]
+      result_1_epoch2_coord2.json: эпоха=2 узел=coord2 пар=36261 сумма=286936 sha256=7fcf1f679cbd6ebe… -> СОВПАЛО
+      result_2_epoch1_coord1.json: эпоха=1 узел=coord1 пар=36261 сумма=286936 sha256=7fcf1f679cbd6ebe… -> СОВПАЛО
+      Принятых результатов: 2
+      Принято результатов: 2, ожидалось: 2 -> OK
+
+[14:44:21] 15. Сохраняю материалы эксперимента
+       Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+       [4m>>>> Executing external compose provider "/usr/libexec/docker/cli-plugins/docker-compose". Please see podman-compose(1) for how to disable this message. <<<<
+       
+       [0mConnecting to zoo1:2181
+       2026-10-27 11:44:21,738 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:zookeeper.version=3.9.6-a355171b081b5b60749db8f19cca1528b0df936f, built on 2026-09-03 19:29 UTC
+       2026-10-27 11:44:21,739 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:host.name=zoo1
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.version=17.0.20.1
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.vendor=Eclipse Adoptium
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.home=/opt/java/openjdk
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.class.path=/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/classes:/apache-zookeeper-3.9.6-bin/bin/../build/classes:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-metrics-providers/zookeeper-prometheus-metrics/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/target/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../build/lib/*.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-prometheus-metrics-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-jute-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/zookeeper-3.9.6.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/snappy-java-1.1.10.5.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/slf4j-api-2.0.13.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_servlet-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_hotspot-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient_common-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/simpleclient-0.9.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-unix-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-native-epoll-4.1.137.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-classes-epoll-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-transport-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-classes-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-windows-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-osx-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-x86_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final-linux-aarch_64.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-tcnative-boringssl-static-2.0.81.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-resolver-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-handler-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-common-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-codec-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/netty-buffer-4.1.137.Final.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/metrics-core-4.1.12.1.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-core-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/logback-classic-1.3.15.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jline-3.30.14-jdk8.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-ajax-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-util-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-servlet-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-server-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-security-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-io-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jetty-http-9.4.58.v20250814.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/javax.servlet-api-3.1.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-databind-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-core-2.22.2.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/jackson-annotations-2.22.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-io-2.17.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/commons-cli-1.5.0.jar:/apache-zookeeper-3.9.6-bin/bin/../lib/audience-annotations-0.12.0.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-*.jar:/apache-zookeeper-3.9.6-bin/bin/../zookeeper-server/src/main/resources/lib/*.jar:/conf:
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.io.tmpdir=/tmp
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:java.compiler=<NA>
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.name=Linux
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.arch=amd64
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.version=7.0.0-38-generic
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.name=root
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.home=/root
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:user.dir=/apache-zookeeper-3.9.6-bin
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.free=218MB
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.max=256MB
+       2026-10-27 11:44:21,740 [myid:] - INFO  [main:o.a.z.Environment@98] - Client environment:os.memory.total=232MB
+       2026-10-27 11:44:21,741 [myid:] - INFO  [main:o.a.z.ZooKeeper@635] - Initiating client connection, connectString=zoo1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain$MyWatcher@2b546384
+       2026-10-27 11:44:21,746 [myid:] - INFO  [main:o.a.z.c.X509Util@84] - Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+       2026-10-27 11:44:21,750 [myid:] - INFO  [main:o.a.z.ClientCnxnSocket@235] - jute.maxbuffer value is 1048575 Bytes
+       2026-10-27 11:44:21,754 [myid:] - INFO  [main:o.a.z.ClientCnxn@1734] - zookeeper.request.timeout value is 0. feature enabled=false
+       2026-10-27 11:44:21,757 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1170] - Opening socket connection to server zoo1/10.89.3.4:2181.
+       2026-10-27 11:44:21,757 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1172] - SASL config status: Will not attempt to authenticate using SASL (unknown error)
+       2026-10-27 11:44:21,761 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1006] - Socket connection established, initiating session, client: /10.89.3.4:45526, server: zoo1/10.89.3.4:2181
+       2026-10-27 11:44:21,768 [myid:zoo1:2181] - INFO  [main-SendThread(zoo1:2181):o.a.z.ClientCnxn$SendThread@1438] - Session establishment complete on server zoo1/10.89.3.4:2181, session id = 0x10001e82182000d, negotiated timeout = 30000
+       
+       WATCHER::
+       
+       WatchedEvent state:SyncConnected type:None path:null zxid: -1
+       2
+       2026-10-27 11:44:21,773 [myid:] - INFO  [main:o.a.z.u.ServiceUtils@45] - Exiting JVM with code 0
+
+[14:44:22] 16. Останавливаю координаторы и sink
+    $ docker compose kill coord1 coord2 sink
+      
+      [0m Container zk-failover-sink-1  Killing
+       Container zk-failover-sink-1  Killed
+
+============================================================
+ ИТОГ ЭТАПА 3
+   смена лидера:          8.0 с после заморозки
+   принято результатов:   2 (ожидалось 2) -> OK
+   журналы и материалы:   logs/stage3/
+============================================================
